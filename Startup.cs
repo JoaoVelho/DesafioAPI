@@ -114,6 +114,7 @@ namespace DesafioAPI
             });
 
             app.UseSwaggerUI(config => {
+                config.RoutePrefix = string.Empty;
                 config.SwaggerEndpoint("/api/v1/swagger.json", "v1 docs");
             });
         }
