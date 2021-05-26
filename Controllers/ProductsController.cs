@@ -64,8 +64,6 @@ namespace DesafioAPI.Controllers
 
         [HttpPut("{id}")]
         public ActionResult Put(int id, [FromBody] Product product) {
-            if (product == null) return NotFound();
-
             if (id != product.Id) {
                 return BadRequest();
             }

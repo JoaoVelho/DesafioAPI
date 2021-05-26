@@ -54,6 +54,7 @@ namespace DesafioAPI.Controllers
             if (id != stockTemp.Id) {
                 return BadRequest();
             }
+            
             try {
                 var stock = _database.Stocks
                     .FirstOrDefault(stock => stock.Id == id);
