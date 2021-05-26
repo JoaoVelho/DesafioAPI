@@ -6,6 +6,7 @@ namespace DesafioAPI.Models
     {
         public string CPF { get; set; }
         public string Name { get; set; }
-        public string Address { get; set; }
+        public ClientAddress Address { get; set; }
+        public int AddressId { get; set; }
     }
 }
