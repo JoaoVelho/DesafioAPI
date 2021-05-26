@@ -33,7 +33,7 @@ namespace DesafioAPI.Controllers
             }
         }
 
-        [HttpGet("{id}", Name = "GetStock")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Stock>> GetByIdAsync(int id) {
             try {
                 var stock = await _database.Stocks

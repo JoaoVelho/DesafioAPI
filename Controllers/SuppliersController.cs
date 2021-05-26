@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.Models;
@@ -28,23 +29,73 @@ namespace DesafioAPI.Controllers
                 return suppliers;
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Erro ao tentar buscar os estoques do banco de dados");
+                    "Erro ao tentar buscar os fornecedores do banco de dados");
             }
         }
 
         [HttpGet("{id}", Name = "GetSupplier")]
-        public async Task<ActionResult<Stock>> GetByIdAsync(int id) {
+        public async Task<ActionResult<Supplier>> GetByIdAsync(int id) {
             try {
-                var stock = await _database.Stocks
+                var supplier = await _database.Suppliers
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(stock => stock.Id == id);
+                    .FirstOrDefaultAsync(supplier => supplier.Id == id);
 
-                if (stock == null) return NotFound();
+                if (supplier == null) return NotFound();
 
-                return stock;
+                return supplier;
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Erro ao tentar buscar o estoque do banco de dados");
+                    "Erro ao tentar buscar o fornecedor do banco de dados");
+            }
+        }
+
+        [HttpPost]
+        public ActionResult Create([FromBody] Supplier supplier) {
+            try {
+                _database.Suppliers.Add(supplier);
+                _database.SaveChanges();
+
+                return new CreatedAtRouteResult("GetSupplier", new { id = supplier.Id }, supplier);
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar criar o fornecedor no banco de dados");
+            }
+        }
+
+        [HttpPut("{id}")]
+        public ActionResult Put(int id, [FromBody] Supplier supplier) {
+            if (supplier == null) return NotFound();
+
+            if (id != supplier.Id) {
+                return BadRequest();
+            }
+
+            try {
+                _database.Entry(supplier).State = EntityState.Modified;
+                _database.SaveChanges();
+                return Ok();
+            } catch(Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar editar o fornecedor no banco de dados");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult<Supplier> Delete(int id) {
+            try {
+                var supplier = _database.Suppliers
+                    .Include(supplier => supplier.Address)
+                    .FirstOrDefault(supplier => supplier.Id == id);
+
+                if (supplier == null) return NotFound();
+
+                _database.SupplierAddresses.Remove(supplier.Address); // Delete also the supplier by Cascade
+                _database.SaveChanges();
+
+                return supplier;
+            } catch(Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar deletar o fornecedor do banco de dados");
             }
         }
     }

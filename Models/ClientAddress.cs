@@ -1,8 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace DesafioAPI.Models
 {
     public class ClientAddress
     {
         public int Id { get; set; }
+
+        [JsonIgnore]
         public Client Client { get; set; }
         public string Street { get; set; }
         public int Number { get; set; }

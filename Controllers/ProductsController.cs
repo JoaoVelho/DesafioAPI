@@ -63,21 +63,15 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult Put(int id, [FromBody] Product productTemp) {
-            if (id != productTemp.Id) {
+        public ActionResult Put(int id, [FromBody] Product product) {
+            if (product == null) return NotFound();
+
+            if (id != product.Id) {
                 return BadRequest();
             }
 
             try {
-                var product = _database.Products
-                    .FirstOrDefault(prod => prod.Id == id);
-
-                if (product == null) return NotFound();
-                
-                product.Name = productTemp.Name;
-                product.Description = productTemp.Description;
-                product.Unit = productTemp.Unit;
-
+                _database.Entry(product).State = EntityState.Modified;
                 _database.SaveChanges();
                 return Ok();
             } catch(Exception) {
