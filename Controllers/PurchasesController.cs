@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ namespace DesafioAPI.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
     public class PurchasesController : ControllerBase
     {
         private readonly ApplicationDbContext _database;

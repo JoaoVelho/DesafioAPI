@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.DTOs;
 using DesafioAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
         public async Task<ActionResult<List<ClientDTO>>> GetAsync() {
             try {
                 var clientsTemp = await _database.Clients.Include(client => client.Address)
@@ -101,6 +103,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         public async Task<ActionResult> Put(string id, [FromBody] ClientDTO clientDTO) {
             if (id != clientDTO.Id) {
                 return BadRequest();
@@ -134,6 +137,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         public ActionResult<Client> Delete(string id) {
             try {
                 var client = _database.Clients
@@ -157,6 +161,10 @@ namespace DesafioAPI.Controllers
             var claims = new List<Claim> {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            if (model.Email.Equals("adm@admin.com")) {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
 
             // generate key using symmetric algorithm
             var key = new SymmetricSecurityKey(

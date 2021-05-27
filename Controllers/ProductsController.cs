@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ namespace DesafioAPI.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -50,6 +52,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public ActionResult Create([FromBody] Product product) {
             try {
                 _database.Products.Add(product);
@@ -63,6 +66,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult Put(int id, [FromBody] Product product) {
             if (id != product.Id) {
                 return BadRequest();
@@ -79,6 +83,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public ActionResult<Product> Delete(int id) {
             try {
                 var product = _database.Products
