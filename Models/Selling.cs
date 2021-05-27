@@ -8,5 +8,6 @@ namespace DesafioAPI.Models
         public Client Client { get; set; }
         public string ClientId { get; set; }
         public ICollection<SellingItem> SellingItems { get; set; }
+        public bool Confirmed { get; set; }
     }
 }
