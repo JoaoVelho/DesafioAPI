@@ -157,8 +157,11 @@ namespace DesafioAPI.Controllers
         }
 
         private UserToken GenerateToken(UserLoginDTO model) {
+            var userId = _userManager.GetUserId(User);
+
             // define user claims
             var claims = new List<Claim> {
+                new Claim("userId", userId),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

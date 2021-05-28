@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.Models;
@@ -25,9 +26,15 @@ namespace DesafioAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Selling>>> GetAsync() {
             try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                string userId = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
+
                 var sellings = await _database.Sellings
                     .Include(sell => sell.Client)
                     .Include(sell => sell.SellingItems)
+                    .Where(sell => isAdmin == null ? sell.ClientId == userId : true)
                     .AsNoTracking().ToListAsync();
 
                 return sellings;
@@ -40,9 +47,15 @@ namespace DesafioAPI.Controllers
         [HttpGet("{id}", Name = "GetSelling")]
         public async Task<ActionResult<Selling>> GetByIdAsync(int id) {
             try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                string userId = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
+
                 var selling = await _database.Sellings
                     .Include(sell => sell.Client)
                     .Include(sell => sell.SellingItems)
+                    .Where(sell => isAdmin == null ? sell.ClientId == userId : true)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(sell => sell.Id == id);
 
@@ -58,6 +71,8 @@ namespace DesafioAPI.Controllers
         [HttpPost]
         public ActionResult Create([FromBody] Selling selling) {
             try {
+                selling.ClientId = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
                 selling.Confirmed = false;
                 _database.Sellings.Add(selling);
 
@@ -83,10 +98,14 @@ namespace DesafioAPI.Controllers
         [HttpPut("{id}/confirmation")]
         public ActionResult Put(int id) {
             try {
+                string userId = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
+
                 var selling = _database.Sellings
                     .FirstOrDefault(sell => sell.Id == id);
 
                 if (selling == null) return NotFound();
+                if (selling.ClientId != userId) return NotFound();
                 
                 selling.Confirmed = true;
 
