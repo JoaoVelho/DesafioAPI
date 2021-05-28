@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.Models;
@@ -25,8 +26,23 @@ namespace DesafioAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Product>>> GetAsync() {
             try {
-                var products = await _database.Products
-                    .AsNoTracking().ToListAsync();
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                var products = new List<Product>();
+
+                if (isAdmin != null && isAdmin.Value.Equals("Admin")) {
+                    products = await _database.Products
+                        .AsNoTracking().ToListAsync();
+                } else {
+                    var stocks = await _database.Stocks.Include(stock => stock.Product)
+                        .AsNoTracking().ToListAsync();
+                    
+                    stocks.ForEach(stock => {
+                        if (stock.Quantity > 0 && stock.SellValue > 0) {
+                            products.Add(stock.Product);
+                        }
+                    });
+                }
 
                 return products;
             } catch (Exception) {
@@ -38,11 +54,21 @@ namespace DesafioAPI.Controllers
         [HttpGet("{id}", Name = "GetProduct")]
         public async Task<ActionResult<Product>> GetByIdAsync(int id) {
             try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+
                 var product = await _database.Products
                     .AsNoTracking()
                     .FirstOrDefaultAsync(prod => prod.Id == id);
 
                 if (product == null) return NotFound();
+
+                if (isAdmin == null) {
+                    var stock = _database.Stocks.AsNoTracking()
+                        .FirstOrDefault(stock => stock.ProductId == product.Id);
+                    
+                    if (stock == null) return NotFound();
+                }
 
                 return product;
             } catch (Exception) {
