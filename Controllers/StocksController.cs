@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
+using DesafioAPI.DTOs;
 using DesafioAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,10 +24,21 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Stock>>> GetAsync() {
+        public async Task<ActionResult<List<StockOutDTO>>> GetAsync() {
             try {
-                var stocks = await _database.Stocks
+                var stocksTemp = await _database.Stocks
                     .AsNoTracking().ToListAsync();
+
+                var stocks = new List<StockOutDTO>();
+                stocksTemp.ForEach(stockTemp => {
+                    var stock = new StockOutDTO {
+                        Id = stockTemp.Id,
+                        ProductId = stockTemp.ProductId,
+                        Quantity = stockTemp.Quantity,
+                        SellValue = stockTemp.SellValue
+                    };
+                    stocks.Add(stock);
+                });
 
                 return stocks;
             } catch (Exception) {
@@ -36,13 +48,20 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Stock>> GetByIdAsync(int id) {
+        public async Task<ActionResult<StockOutDTO>> GetByIdAsync(int id) {
             try {
-                var stock = await _database.Stocks
+                var stockTemp = await _database.Stocks
                     .AsNoTracking()
                     .FirstOrDefaultAsync(stock => stock.Id == id);
 
-                if (stock == null) return NotFound();
+                if (stockTemp == null) return NotFound();
+
+                var stock = new StockOutDTO {
+                    Id = stockTemp.Id,
+                    ProductId = stockTemp.ProductId,
+                    Quantity = stockTemp.Quantity,
+                    SellValue = stockTemp.SellValue
+                };
 
                 return stock;
             } catch (Exception) {
@@ -52,8 +71,8 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult Put(int id, [FromBody] Stock stockTemp) {
-            if (id != stockTemp.Id) {
+        public ActionResult Put(int id, [FromBody] StockEditDTO stockDTOTemp) {
+            if (id != stockDTOTemp.Id) {
                 return BadRequest();
             }
             
@@ -63,7 +82,7 @@ namespace DesafioAPI.Controllers
 
                 if (stock == null) return NotFound();
                 
-                stock.SellValue = stockTemp.SellValue;
+                stock.SellValue = stockDTOTemp.SellValue;
 
                 _database.SaveChanges();
                 return Ok();
