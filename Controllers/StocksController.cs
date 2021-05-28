@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using DesafioAPI.Data;
 using DesafioAPI.DTOs;
-using DesafioAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

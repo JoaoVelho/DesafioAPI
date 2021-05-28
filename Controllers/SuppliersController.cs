@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using DesafioAPI.Data;
+using DesafioAPI.DTOs;
 using DesafioAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,16 +19,21 @@ namespace DesafioAPI.Controllers
     public class SuppliersController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
+        private readonly IMapper _mapper;
 
-        public SuppliersController(ApplicationDbContext database) {
+        public SuppliersController(ApplicationDbContext database, IMapper mapper) {
             _database = database;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Supplier>>> GetAsync() {
+        public async Task<ActionResult<List<SupplierOutDTO>>> GetAsync() {
             try {
-                var suppliers = await _database.Suppliers
+                var suppliersTemp = await _database.Suppliers
+                    .Include(supplier => supplier.Address)
                     .AsNoTracking().ToListAsync();
+
+                var suppliers = _mapper.Map<List<SupplierOutDTO>>(suppliersTemp);
 
                 return suppliers;
             } catch (Exception) {
@@ -36,13 +43,16 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("{id}", Name = "GetSupplier")]
-        public async Task<ActionResult<Supplier>> GetByIdAsync(int id) {
+        public async Task<ActionResult<SupplierOutDTO>> GetByIdAsync(int id) {
             try {
-                var supplier = await _database.Suppliers
+                var supplierTemp = await _database.Suppliers
+                    .Include(supplier => supplier.Address)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(supplier => supplier.Id == id);
 
-                if (supplier == null) return NotFound();
+                if (supplierTemp == null) return NotFound();
+
+                var supplier = _mapper.Map<SupplierOutDTO>(supplierTemp);
 
                 return supplier;
             } catch (Exception) {
@@ -52,12 +62,16 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] Supplier supplier) {
+        public ActionResult Create([FromBody] SupplierCreateDTO supplierDTO) {
             try {
+                var supplier = _mapper.Map<Supplier>(supplierDTO);
+
                 _database.Suppliers.Add(supplier);
                 _database.SaveChanges();
 
-                return new CreatedAtRouteResult("GetSupplier", new { id = supplier.Id }, supplier);
+                var supplierOut = _mapper.Map<SupplierOutDTO>(supplier);
+
+                return new CreatedAtRouteResult("GetSupplier", new { id = supplier.Id }, supplierOut);
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar criar o fornecedor no banco de dados");
@@ -65,13 +79,21 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public ActionResult Put(int id, [FromBody] Supplier supplier) {
-            if (id != supplier.Id) {
+        public ActionResult Put(int id, [FromBody] SupplierEditDTO supplierDTO) {
+            if (id != supplierDTO.Id) {
                 return BadRequest();
             }
 
             try {
+                var supplier = _mapper.Map<Supplier>(supplierDTO);
+                var address = _database.SupplierAddresses.Include(address => address.Supplier)
+                    .AsNoTracking().FirstOrDefault(address => address.Supplier.Id == supplier.Id);
+                
+                supplier.Address.Id = address.Id;
+                supplier.AddressId = address.Id;
+
                 _database.Entry(supplier).State = EntityState.Modified;
+                _database.Entry(supplier.Address).State = EntityState.Modified;
                 _database.SaveChanges();
                 return Ok();
             } catch(Exception) {
@@ -81,7 +103,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<Supplier> Delete(int id) {
+        public ActionResult<SupplierOutDTO> Delete(int id) {
             try {
                 var supplier = _database.Suppliers
                     .Include(supplier => supplier.Address)
@@ -89,10 +111,12 @@ namespace DesafioAPI.Controllers
 
                 if (supplier == null) return NotFound();
 
+                var supplierOut = _mapper.Map<SupplierOutDTO>(supplier);
+
                 _database.SupplierAddresses.Remove(supplier.Address); // Delete also the supplier by Cascade
                 _database.SaveChanges();
 
-                return supplier;
+                return supplierOut;
             } catch(Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar deletar o fornecedor do banco de dados");
