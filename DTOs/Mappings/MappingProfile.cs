@@ -7,6 +7,8 @@ namespace DesafioAPI.DTOs.Mappings
     {
         public MappingProfile()
         {
+            CreateMap<Client, ClientDTO>().ReverseMap();
+            CreateMap<Client, UserRegisterDTO>().ReverseMap();
             CreateMap<ClientAddress, AddressDTO>().ReverseMap();
             CreateMap<SupplierAddress, AddressDTO>().ReverseMap();
             CreateMap<Supplier, SupplierOutDTO>().ReverseMap();

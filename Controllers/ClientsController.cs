@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using DesafioAPI.Data;
 using DesafioAPI.DTOs;
 using DesafioAPI.Models;
@@ -26,13 +27,15 @@ namespace DesafioAPI.Controllers
         private readonly UserManager<Client> _userManager;
         private readonly SignInManager<Client> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
         public ClientsController(ApplicationDbContext database, UserManager<Client> userManager, 
-            SignInManager<Client> signInManager, IConfiguration configuration) {
+            SignInManager<Client> signInManager, IConfiguration configuration, IMapper mapper) {
             _database = database;
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -42,18 +45,7 @@ namespace DesafioAPI.Controllers
                 var clientsTemp = await _database.Clients.Include(client => client.Address)
                     .AsNoTracking().ToListAsync();
 
-                List<ClientDTO> clients = new List<ClientDTO>();
-                clientsTemp.ForEach(clientTemp => {
-                    ClientDTO client = new ClientDTO {
-                        Id = clientTemp.Id,
-                        CPF = clientTemp.CPF,
-                        Name = clientTemp.Name,
-                        Phone = clientTemp.PhoneNumber,
-                        Email = clientTemp.Email,
-                        Address = clientTemp.Address
-                    };
-                    clients.Add(client);
-                });
+                var clients = _mapper.Map<List<ClientDTO>>(clientsTemp);
 
                 return clients;
             } catch (Exception) {
@@ -65,15 +57,8 @@ namespace DesafioAPI.Controllers
         [HttpPost("register")]
         public async Task<ActionResult> Register([FromBody] UserRegisterDTO model) {
             if (model.Password == model.ConfirmPassword) {
-                var client = new Client {
-                    Name = model.Name,
-                    CPF = model.CPF,
-                    PhoneNumber = model.Phone,
-                    Address = model.Address,
-                    UserName = model.Email,
-                    Email = model.Email,
-                    EmailConfirmed = true
-                };
+                var client = _mapper.Map<Client>(model);
+                client.UserName = model.Email;
 
                 var result = await _userManager.CreateAsync(client, model.Password);
 
@@ -114,7 +99,7 @@ namespace DesafioAPI.Controllers
             
             client.Name = clientDTO.Name;
             client.CPF = clientDTO.CPF;
-            client.PhoneNumber = clientDTO.Phone;
+            client.PhoneNumber = clientDTO.PhoneNumber;
             client.UserName = clientDTO.Email;
             client.Email = clientDTO.Email;
 
@@ -138,7 +123,7 @@ namespace DesafioAPI.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(AuthenticationSchemes = "Bearer")]
-        public ActionResult<Client> Delete(string id) {
+        public ActionResult<ClientDTO> Delete(string id) {
             try {
                 var client = _database.Clients
                     .Include(client => client.Address)
@@ -146,10 +131,12 @@ namespace DesafioAPI.Controllers
 
                 if (client == null) return NotFound();
 
+                var clientDTO = _mapper.Map<ClientDTO>(client);
+
                 _database.ClientAddresses.Remove(client.Address); // Delete also the client by Cascade
                 _database.SaveChanges();
 
-                return client;
+                return clientDTO;
             } catch(Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar deletar o cliente do banco de dados");
@@ -157,7 +144,8 @@ namespace DesafioAPI.Controllers
         }
 
         private UserToken GenerateToken(UserLoginDTO model) {
-            var userId = _userManager.GetUserId(User);
+            var userId = _database.Clients.AsNoTracking()
+                .FirstOrDefault(client => client.Email == model.Email).Id;
 
             // define user claims
             var claims = new List<Claim> {

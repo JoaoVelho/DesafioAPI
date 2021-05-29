@@ -7,8 +7,8 @@ namespace DesafioAPI.DTOs
         public string Id { get; set; }
         public string CPF { get; set; }
         public string Name { get; set; }
-        public string Phone { get; set; }
+        public string PhoneNumber { get; set; }
         public string Email { get; set; }
-        public ClientAddress Address { get; set; }
+        public AddressDTO Address { get; set; }
     }
 }
