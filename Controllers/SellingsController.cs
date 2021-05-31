@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
 using DesafioAPI.Data;
+using DesafioAPI.DTOs;
 using DesafioAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,13 +20,15 @@ namespace DesafioAPI.Controllers
     public class SellingsController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
+        private readonly IMapper _mapper;
 
-        public SellingsController(ApplicationDbContext database) {
+        public SellingsController(ApplicationDbContext database, IMapper mapper) {
             _database = database;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Selling>>> GetAsync() {
+        public async Task<ActionResult<List<SellingOutDTO>>> GetAsync() {
             try {
                 var isAdmin = HttpContext.User.Claims
                     .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
@@ -32,12 +36,13 @@ namespace DesafioAPI.Controllers
                     .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
 
                 var sellings = await _database.Sellings
-                    .Include(sell => sell.Client)
                     .Include(sell => sell.SellingItems)
                     .Where(sell => isAdmin == null ? sell.ClientId == userId : true)
                     .AsNoTracking().ToListAsync();
 
-                return sellings;
+                var sellingsDTO = _mapper.Map<List<SellingOutDTO>>(sellings);
+
+                return sellingsDTO;
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar buscar as vendas do banco de dados");
@@ -45,7 +50,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("{id}", Name = "GetSelling")]
-        public async Task<ActionResult<Selling>> GetByIdAsync(int id) {
+        public async Task<ActionResult<SellingOutDTO>> GetByIdAsync(int id) {
             try {
                 var isAdmin = HttpContext.User.Claims
                     .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
@@ -53,7 +58,6 @@ namespace DesafioAPI.Controllers
                     .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
 
                 var selling = await _database.Sellings
-                    .Include(sell => sell.Client)
                     .Include(sell => sell.SellingItems)
                     .Where(sell => isAdmin == null ? sell.ClientId == userId : true)
                     .AsNoTracking()
@@ -61,7 +65,9 @@ namespace DesafioAPI.Controllers
 
                 if (selling == null) return NotFound();
 
-                return selling;
+                var sellingDTO = _mapper.Map<SellingOutDTO>(selling);
+
+                return sellingDTO;
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar buscar a venda do banco de dados");
@@ -69,8 +75,10 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] Selling selling) {
+        public ActionResult Create([FromBody] SellingCreateDTO sellingDTO) {
             try {
+                var selling = _mapper.Map<Selling>(sellingDTO);
+
                 selling.ClientId = HttpContext.User.Claims
                     .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
                 selling.Confirmed = false;
@@ -88,7 +96,9 @@ namespace DesafioAPI.Controllers
 
                 _database.SaveChanges();
 
-                return new CreatedAtRouteResult("GetSelling", new { id = selling.Id }, selling);
+                var sellingOut = _mapper.Map<SellingOutDTO>(selling);
+
+                return new CreatedAtRouteResult("GetSelling", new { id = selling.Id }, sellingOut);
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar criar a venda no banco de dados");

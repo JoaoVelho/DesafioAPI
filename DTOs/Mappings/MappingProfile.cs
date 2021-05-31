@@ -18,6 +18,9 @@ namespace DesafioAPI.DTOs.Mappings
             CreateMap<PurchaseItem, ItemDTO>().ReverseMap();
             CreateMap<Purchase, PurchaseOutDTO>().ReverseMap();
             CreateMap<Purchase, PurchaseCreateDTO>().ReverseMap();
+            CreateMap<Selling, SellingOutDTO>().ReverseMap();
+            CreateMap<Selling, SellingCreateDTO>().ReverseMap();
+            CreateMap<SellingItem, ItemDTO>().ReverseMap();
         }
     }
 }
