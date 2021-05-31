@@ -53,6 +53,24 @@ namespace DesafioAPI.Controllers
             }
         }
 
+        [HttpGet("client/{clientId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<List<SellingOutDTO>>> GetByClientIdAsync(string clientId) {
+            try {
+                var sellings = await _database.Sellings
+                    .Include(sell => sell.SellingItems)
+                    .Where(sell => sell.ClientId == clientId)
+                    .AsNoTracking().ToListAsync();
+
+                var sellingsDTO = _mapper.Map<List<SellingOutDTO>>(sellings);
+
+                return sellingsDTO;
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar buscar as vendas do banco de dados");
+            }
+        }
+
         [HttpGet("{id}", Name = "GetSelling")]
         public async Task<ActionResult<SellingOutDTO>> GetByIdAsync(int id) {
             try {
