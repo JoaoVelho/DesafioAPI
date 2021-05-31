@@ -42,6 +42,23 @@ namespace DesafioAPI.Controllers
             }
         }
 
+        [HttpGet("supplier/{supplierId}")]
+        public async Task<ActionResult<List<PurchaseOutDTO>>> GetBySupplierIdAsync(int supplierId) {
+            try {
+                var purchases = await _database.Purchases
+                    .Include(purch => purch.PurchaseItems)
+                    .Where(purch => purch.SupplierId == supplierId)
+                    .AsNoTracking().ToListAsync();
+
+                var purchasesDTO = _mapper.Map<List<PurchaseOutDTO>>(purchases);
+
+                return purchasesDTO;
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar buscar as compras do banco de dados");
+            }
+        }
+
         [HttpGet("{id}", Name = "GetPurchase")]
         public async Task<ActionResult<PurchaseOutDTO>> GetByIdAsync(int id) {
             try {
