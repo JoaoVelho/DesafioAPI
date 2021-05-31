@@ -51,6 +51,66 @@ namespace DesafioAPI.Controllers
             }
         }
 
+        [HttpGet("asc")]
+        public async Task<ActionResult<List<Product>>> GetAscAsync() {
+            try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                var products = new List<Product>();
+
+                if (isAdmin != null && isAdmin.Value.Equals("Admin")) {
+                    products = await _database.Products
+                        .AsNoTracking().ToListAsync();
+                } else {
+                    var stocks = await _database.Stocks.Include(stock => stock.Product)
+                        .AsNoTracking().ToListAsync();
+                    
+                    stocks.ForEach(stock => {
+                        if (stock.Quantity > 0 && stock.SellValue > 0) {
+                            products.Add(stock.Product);
+                        }
+                    });
+                }
+
+                products = products.OrderBy(prod => prod.Name).ToList();
+
+                return products;
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar buscar os produtos do banco de dados");
+            }
+        }
+
+        [HttpGet("desc")]
+        public async Task<ActionResult<List<Product>>> GetDescAsync() {
+            try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                var products = new List<Product>();
+
+                if (isAdmin != null && isAdmin.Value.Equals("Admin")) {
+                    products = await _database.Products
+                        .AsNoTracking().ToListAsync();
+                } else {
+                    var stocks = await _database.Stocks.Include(stock => stock.Product)
+                        .AsNoTracking().ToListAsync();
+                    
+                    stocks.ForEach(stock => {
+                        if (stock.Quantity > 0 && stock.SellValue > 0) {
+                            products.Add(stock.Product);
+                        }
+                    });
+                }
+                
+                products = products.OrderByDescending(prod => prod.Name).ToList();
+
+                return products;
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar buscar os produtos do banco de dados");
+            }
+        }
+
         [HttpGet("{id}", Name = "GetProduct")]
         public async Task<ActionResult<Product>> GetByIdAsync(int id) {
             try {
@@ -60,6 +120,32 @@ namespace DesafioAPI.Controllers
                 var product = await _database.Products
                     .AsNoTracking()
                     .FirstOrDefaultAsync(prod => prod.Id == id);
+
+                if (product == null) return NotFound();
+
+                if (isAdmin == null) {
+                    var stock = _database.Stocks.AsNoTracking()
+                        .FirstOrDefault(stock => stock.ProductId == product.Id);
+                    
+                    if (stock == null) return NotFound();
+                }
+
+                return product;
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar buscar o produto do banco de dados");
+            }
+        }
+
+        [HttpGet("name/{name}")]
+        public async Task<ActionResult<Product>> GetByNameAsync(string name) {
+            try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+
+                var product = await _database.Products
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(prod => prod.Name == name);
 
                 if (product == null) return NotFound();
 
