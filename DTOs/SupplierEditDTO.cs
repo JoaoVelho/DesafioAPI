@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using DesafioAPI.Validations;
 
 namespace DesafioAPI.DTOs
 {
@@ -10,6 +11,7 @@ namespace DesafioAPI.DTOs
         public int Id { get; set; }
 
         [Required(ErrorMessage = "CNPJ é necessário")]
+        [CNPJ]
         public string CNPJ { get; set; }
 
         [Required(ErrorMessage = "Nome é necessário")]

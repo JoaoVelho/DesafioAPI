@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using DesafioAPI.Validations;
 
 namespace DesafioAPI.DTOs
 {
     public class SupplierCreateDTO
     {
         [Required(ErrorMessage = "CNPJ é necessário")]
+        [CNPJ]
         public string CNPJ { get; set; }
 
         [Required(ErrorMessage = "Nome é necessário")]
