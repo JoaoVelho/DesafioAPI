@@ -3,6 +3,8 @@ using AutoMapper;
 using DesafioAPI.Data;
 using DesafioAPI.DTOs.Mappings;
 using DesafioAPI.Models;
+using DesafioAPI.Services;
+using DesafioAPI.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -89,6 +91,9 @@ namespace DesafioAPI
                 };
                 config.AddSecurityRequirement(securityRequirements);
             });
+
+            services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
+            services.AddTransient<IMailService, MailService>();
 
             services.AddControllers();
         }

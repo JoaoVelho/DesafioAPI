@@ -7,6 +7,7 @@ using AutoMapper;
 using DesafioAPI.Data;
 using DesafioAPI.DTOs;
 using DesafioAPI.Models;
+using DesafioAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,10 +22,13 @@ namespace DesafioAPI.Controllers
     {
         private readonly ApplicationDbContext _database;
         private readonly IMapper _mapper;
+        private readonly IMailService _mailService;
 
-        public SellingsController(ApplicationDbContext database, IMapper mapper) {
+        public SellingsController(ApplicationDbContext database, IMapper mapper, 
+            IMailService mailService) {
             _database = database;
             _mapper = mapper;
+            _mailService = mailService;
         }
 
         [HttpGet]
@@ -75,7 +79,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] SellingCreateDTO sellingDTO) {
+        public async Task<ActionResult> Create([FromBody] SellingCreateDTO sellingDTO) {
             try {
                 var selling = _mapper.Map<Selling>(sellingDTO);
 
@@ -95,6 +99,16 @@ namespace DesafioAPI.Controllers
                 }
 
                 _database.SaveChanges();
+
+                var email = _database.Clients.AsNoTracking()
+                    .FirstOrDefault(client => client.Id == selling.ClientId).Email;
+
+                MailRequest request = new MailRequest {
+                    ToEmail = email,
+                    Subject = "Compra Realizada",
+                    Body = "Compra realizada com sucesso, obrigado por comprar conosco!"
+                };
+                await _mailService.SendEmailAsync(request);
 
                 var sellingOut = _mapper.Map<SellingOutDTO>(selling);
 
