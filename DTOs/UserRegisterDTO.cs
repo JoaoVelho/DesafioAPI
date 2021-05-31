@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using DesafioAPI.Models;
+using DesafioAPI.Validations;
 
 namespace DesafioAPI.DTOs
 {
@@ -14,6 +14,7 @@ namespace DesafioAPI.DTOs
         public string Name { get; set; }
 
         [Required(ErrorMessage = "CPF é necessário")]
+        [CPF]
         public string CPF { get; set; }
 
         [Required(ErrorMessage = "Telefone é necessário")]
