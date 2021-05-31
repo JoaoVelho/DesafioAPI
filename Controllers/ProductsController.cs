@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
 using DesafioAPI.Data;
+using DesafioAPI.DTOs;
 using DesafioAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,9 +20,11 @@ namespace DesafioAPI.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
+        private readonly IMapper _mapper;
 
-        public ProductsController(ApplicationDbContext database) {
+        public ProductsController(ApplicationDbContext database, IMapper mapper) {
             _database = database;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -165,8 +169,10 @@ namespace DesafioAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public ActionResult Create([FromBody] Product product) {
+        public ActionResult Create([FromBody] ProductCreateDTO productDTO) {
             try {
+                var product = _mapper.Map<Product>(productDTO);
+
                 _database.Products.Add(product);
                 _database.SaveChanges();
 
@@ -179,12 +185,14 @@ namespace DesafioAPI.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public ActionResult Put(int id, [FromBody] Product product) {
-            if (id != product.Id) {
+        public ActionResult Put(int id, [FromBody] ProductEditDTO productDTO) {
+            if (id != productDTO.Id) {
                 return BadRequest();
             }
 
             try {
+                var product = _mapper.Map<Product>(productDTO);
+
                 _database.Entry(product).State = EntityState.Modified;
                 _database.SaveChanges();
                 return Ok();

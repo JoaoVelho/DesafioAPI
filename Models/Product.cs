@@ -5,6 +5,6 @@ namespace DesafioAPI.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public int Unit { get; set; }
+        public string Unit { get; set; }
     }
 }
