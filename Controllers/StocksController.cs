@@ -69,6 +69,29 @@ namespace DesafioAPI.Controllers
             }
         }
 
+        [HttpGet("product/{productId}")]
+        public async Task<ActionResult<StockOutDTO>> GetByProductIdAsync(int productId) {
+            try {
+                var stockTemp = await _database.Stocks
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(stock => stock.ProductId == productId);
+
+                if (stockTemp == null) return NotFound();
+
+                var stock = new StockOutDTO {
+                    Id = stockTemp.Id,
+                    ProductId = stockTemp.ProductId,
+                    Quantity = stockTemp.Quantity,
+                    SellValue = stockTemp.SellValue
+                };
+
+                return stock;
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar buscar o estoque do banco de dados");
+            }
+        }
+
         [HttpPut("{id}")]
         public ActionResult Put(int id, [FromBody] StockEditDTO stockDTOTemp) {
             if (id != stockDTOTemp.Id) {
