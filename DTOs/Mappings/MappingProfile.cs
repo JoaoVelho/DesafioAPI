@@ -15,6 +15,9 @@ namespace DesafioAPI.DTOs.Mappings
             CreateMap<Supplier, SupplierCreateDTO>().ReverseMap();
             CreateMap<Supplier, SupplierEditDTO>().ReverseMap();
             CreateMap<Stock, StockOutDTO>().ReverseMap();
+            CreateMap<PurchaseItem, ItemDTO>().ReverseMap();
+            CreateMap<Purchase, PurchaseOutDTO>().ReverseMap();
+            CreateMap<Purchase, PurchaseCreateDTO>().ReverseMap();
         }
     }
 }

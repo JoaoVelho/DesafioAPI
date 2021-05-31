@@ -11,7 +11,7 @@ namespace DesafioAPI.Models
         public int SellingId { get; set; }
         public Product Product { get; set; }
         public int ProductId { get; set; }
-        public int Quantity { get; set; }
-        public int Value { get; set; }
+        public float Quantity { get; set; }
+        public float Value { get; set; }
     }
 }

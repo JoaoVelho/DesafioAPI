@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using DesafioAPI.Data;
+using DesafioAPI.DTOs;
 using DesafioAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,20 +19,23 @@ namespace DesafioAPI.Controllers
     public class PurchasesController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
+        private readonly IMapper _mapper;
 
-        public PurchasesController(ApplicationDbContext database) {
+        public PurchasesController(ApplicationDbContext database, IMapper mapper) {
             _database = database;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Purchase>>> GetAsync() {
+        public async Task<ActionResult<List<PurchaseOutDTO>>> GetAsync() {
             try {
                 var purchases = await _database.Purchases
-                    .Include(purch => purch.Supplier)
                     .Include(purch => purch.PurchaseItems)
                     .AsNoTracking().ToListAsync();
 
-                return purchases;
+                var purchasesDTO = _mapper.Map<List<PurchaseOutDTO>>(purchases);
+
+                return purchasesDTO;
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar buscar as compras do banco de dados");
@@ -38,17 +43,18 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("{id}", Name = "GetPurchase")]
-        public async Task<ActionResult<Purchase>> GetByIdAsync(int id) {
+        public async Task<ActionResult<PurchaseOutDTO>> GetByIdAsync(int id) {
             try {
                 var purchase = await _database.Purchases
-                    .Include(purch => purch.Supplier)
                     .Include(purch => purch.PurchaseItems)
                     .AsNoTracking()
                     .FirstOrDefaultAsync(purch => purch.Id == id);
 
                 if (purchase == null) return NotFound();
 
-                return purchase;
+                var purchaseDTO = _mapper.Map<PurchaseOutDTO>(purchase);
+
+                return purchaseDTO;
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar buscar a compra do banco de dados");
@@ -56,8 +62,9 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] Purchase purchase) {
+        public ActionResult Create([FromBody] PurchaseCreateDTO purchaseDTO) {
             try {
+                var purchase = _mapper.Map<Purchase>(purchaseDTO);
                 _database.Purchases.Add(purchase);
 
                 foreach (var purchaseItem in purchase.PurchaseItems) {
@@ -85,7 +92,9 @@ namespace DesafioAPI.Controllers
 
                 _database.SaveChanges();
 
-                return new CreatedAtRouteResult("GetPurchase", new { id = purchase.Id }, purchase);
+                var purchaseOut = _mapper.Map<PurchaseOutDTO>(purchase);
+
+                return new CreatedAtRouteResult("GetPurchase", new { id = purchase.Id }, purchaseOut);
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar criar a compra no banco de dados");
