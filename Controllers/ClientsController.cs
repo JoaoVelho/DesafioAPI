@@ -94,30 +94,44 @@ namespace DesafioAPI.Controllers
                 return BadRequest();
             }
 
-            var client = _database.Clients.Include(client => client.Address)
-                .FirstOrDefault(client => client.Id == id);
-            
-            client.Name = clientDTO.Name;
-            client.CPF = clientDTO.CPF;
-            client.PhoneNumber = clientDTO.PhoneNumber;
-            client.UserName = clientDTO.Email;
-            client.Email = clientDTO.Email;
+            try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                string userId = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
 
-            client.Address.Street = clientDTO.Address.Street;
-            client.Address.Number = clientDTO.Address.Number;
-            client.Address.Complement = clientDTO.Address.Complement;
-            client.Address.CEP = clientDTO.Address.CEP;
-            client.Address.District = clientDTO.Address.District;
-            client.Address.City = clientDTO.Address.City;
-            client.Address.State = clientDTO.Address.State;
+                if (isAdmin == null && userId != id) {
+                    return StatusCode(StatusCodes.Status403Forbidden);
+                }
 
-            var result = await _userManager.UpdateAsync(client);
+                var client = _database.Clients.Include(client => client.Address)
+                    .FirstOrDefault(client => client.Id == id);
+                
+                client.Name = clientDTO.Name;
+                client.CPF = clientDTO.CPF;
+                client.PhoneNumber = clientDTO.PhoneNumber;
+                client.UserName = clientDTO.Email;
+                client.Email = clientDTO.Email;
 
-            if (result.Succeeded) {
-                _database.SaveChanges();
-                return Ok();
-            } else {
-                return BadRequest();
+                client.Address.Street = clientDTO.Address.Street;
+                client.Address.Number = clientDTO.Address.Number;
+                client.Address.Complement = clientDTO.Address.Complement;
+                client.Address.CEP = clientDTO.Address.CEP;
+                client.Address.District = clientDTO.Address.District;
+                client.Address.City = clientDTO.Address.City;
+                client.Address.State = clientDTO.Address.State;
+
+                var result = await _userManager.UpdateAsync(client);
+
+                if (result.Succeeded) {
+                    _database.SaveChanges();
+                    return Ok();
+                } else {
+                    return BadRequest();
+                }
+            } catch (Exception) {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    "Erro ao tentar editar o cliente do banco de dados");
             }
         }
 
@@ -125,6 +139,15 @@ namespace DesafioAPI.Controllers
         [Authorize(AuthenticationSchemes = "Bearer")]
         public ActionResult<ClientDTO> Delete(string id) {
             try {
+                var isAdmin = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals(ClaimTypes.Role));
+                string userId = HttpContext.User.Claims
+                    .FirstOrDefault(claim => claim.Type.ToString().Equals("userId")).Value;
+
+                if (isAdmin == null && userId != id) {
+                    return StatusCode(StatusCodes.Status403Forbidden);
+                }
+
                 var client = _database.Clients
                     .Include(client => client.Address)
                     .FirstOrDefault(client => client.Id == id);
@@ -133,13 +156,18 @@ namespace DesafioAPI.Controllers
 
                 var clientDTO = _mapper.Map<ClientDTO>(client);
 
-                _database.ClientAddresses.Remove(client.Address); // Delete also the client by Cascade
-                _database.SaveChanges();
+                try {
+                    _database.ClientAddresses.Remove(client.Address); // Delete also the client by Cascade
+                    _database.SaveChanges();
+                } catch (Exception) {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Não foi possível deletar pois provavelmente há alguma relação entre esse item e outro");
+                }
 
                 return clientDTO;
-            } catch(Exception) {
+            } catch(Exception e) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Erro ao tentar deletar o cliente do banco de dados");
+                    "Erro ao tentar deletar o cliente do banco de dados" + e.Message);
             }
         }
 
