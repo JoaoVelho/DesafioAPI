@@ -6,7 +6,7 @@ namespace DesafioAPI.Models
     {
         public int Id { get; set; }
         public Supplier Supplier { get; set; }
-        public int SupplierId { get; set; }
+        public int? SupplierId { get; set; }
         public ICollection<PurchaseItem> PurchaseItems { get; set; }
     }
 }

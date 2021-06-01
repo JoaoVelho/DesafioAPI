@@ -32,7 +32,7 @@ namespace DesafioAPI.Controllers
                 stocksTemp.ForEach(stockTemp => {
                     var stock = new StockOutDTO {
                         Id = stockTemp.Id,
-                        ProductId = stockTemp.ProductId,
+                        ProductId = (int) stockTemp.ProductId,
                         Quantity = stockTemp.Quantity,
                         SellValue = stockTemp.SellValue
                     };
@@ -57,7 +57,7 @@ namespace DesafioAPI.Controllers
 
                 var stock = new StockOutDTO {
                     Id = stockTemp.Id,
-                    ProductId = stockTemp.ProductId,
+                    ProductId = (int) stockTemp.ProductId,
                     Quantity = stockTemp.Quantity,
                     SellValue = stockTemp.SellValue
                 };
@@ -80,7 +80,7 @@ namespace DesafioAPI.Controllers
 
                 var stock = new StockOutDTO {
                     Id = stockTemp.Id,
-                    ProductId = stockTemp.ProductId,
+                    ProductId = (int) stockTemp.ProductId,
                     Quantity = stockTemp.Quantity,
                     SellValue = stockTemp.SellValue
                 };

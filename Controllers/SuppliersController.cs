@@ -113,8 +113,13 @@ namespace DesafioAPI.Controllers
 
                 var supplierOut = _mapper.Map<SupplierOutDTO>(supplier);
 
-                _database.SupplierAddresses.Remove(supplier.Address); // Delete also the supplier by Cascade
-                _database.SaveChanges();
+                try {
+                    _database.SupplierAddresses.Remove(supplier.Address); // Delete also the supplier by Cascade
+                    _database.SaveChanges();
+                } catch (Exception) {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        "Não foi possível deletar pois provavelmente há alguma relação entre esse item e outro");
+                }
 
                 return supplierOut;
             } catch(Exception) {
