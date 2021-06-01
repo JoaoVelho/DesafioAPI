@@ -14,6 +14,7 @@ namespace DesafioAPI.Controllers
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class StocksController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -107,7 +108,7 @@ namespace DesafioAPI.Controllers
                 stock.SellValue = stockDTOTemp.SellValue;
 
                 _database.SaveChanges();
-                return Ok();
+                return NoContent();
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar editar o estoque do banco de dados");

@@ -21,6 +21,7 @@ namespace DesafioAPI.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class ClientsController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -55,7 +56,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult> Register([FromBody] UserRegisterDTO model) {
+        public async Task<ActionResult<UserToken>> Register([FromBody] UserRegisterDTO model) {
             if (model.Password == model.ConfirmPassword) {
                 var client = _mapper.Map<Client>(model);
                 client.UserName = model.Email;
@@ -75,7 +76,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult> Login([FromBody] UserLoginDTO model) {
+        public async Task<ActionResult<UserToken>> Login([FromBody] UserLoginDTO model) {
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, 
                 isPersistent: false, lockoutOnFailure: false);
             
@@ -106,6 +107,8 @@ namespace DesafioAPI.Controllers
 
                 var client = _database.Clients.Include(client => client.Address)
                     .FirstOrDefault(client => client.Id == id);
+
+                if (client == null) return NotFound();
                 
                 client.Name = clientDTO.Name;
                 client.CPF = clientDTO.CPF;
@@ -125,7 +128,7 @@ namespace DesafioAPI.Controllers
 
                 if (result.Succeeded) {
                     _database.SaveChanges();
-                    return Ok();
+                    return NoContent();
                 } else {
                     return BadRequest();
                 }

@@ -16,6 +16,7 @@ namespace DesafioAPI.Controllers
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class PurchasesController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -79,7 +80,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] PurchaseCreateDTO purchaseDTO) {
+        public ActionResult<PurchaseOutDTO> Create([FromBody] PurchaseCreateDTO purchaseDTO) {
             try {
                 var purchase = _mapper.Map<Purchase>(purchaseDTO);
                 _database.Purchases.Add(purchase);

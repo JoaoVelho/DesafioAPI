@@ -16,6 +16,7 @@ namespace DesafioAPI.Controllers
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class SuppliersController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -62,7 +63,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create([FromBody] SupplierCreateDTO supplierDTO) {
+        public ActionResult<SupplierOutDTO> Create([FromBody] SupplierCreateDTO supplierDTO) {
             try {
                 var supplier = _mapper.Map<Supplier>(supplierDTO);
 
@@ -95,7 +96,7 @@ namespace DesafioAPI.Controllers
                 _database.Entry(supplier).State = EntityState.Modified;
                 _database.Entry(supplier.Address).State = EntityState.Modified;
                 _database.SaveChanges();
-                return Ok();
+                return NoContent();
             } catch(Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar editar o fornecedor no banco de dados");

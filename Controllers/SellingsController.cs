@@ -18,6 +18,7 @@ namespace DesafioAPI.Controllers
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = "Bearer")]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class SellingsController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -97,7 +98,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create([FromBody] SellingCreateDTO sellingDTO) {
+        public async Task<ActionResult<SellingOutDTO>> Create([FromBody] SellingCreateDTO sellingDTO) {
             try {
                 var selling = _mapper.Map<Selling>(sellingDTO);
 
@@ -138,6 +139,8 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}/confirmation")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Put))]
         public ActionResult Put(int id) {
             try {
                 string userId = HttpContext.User.Claims
@@ -152,7 +155,7 @@ namespace DesafioAPI.Controllers
                 selling.Confirmed = true;
 
                 _database.SaveChanges();
-                return Ok();
+                return NoContent();
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar confirmar a venda no banco de dados");

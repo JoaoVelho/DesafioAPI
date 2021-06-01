@@ -17,6 +17,7 @@ namespace DesafioAPI.Controllers
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(AuthenticationSchemes = "Bearer")]
+    [ApiConventionType(typeof(DefaultApiConventions))]
     public class ProductsController : ControllerBase
     {
         private readonly ApplicationDbContext _database;
@@ -142,6 +143,8 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("name/{name}")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async Task<ActionResult<Product>> GetByNameAsync(string name) {
             try {
                 var isAdmin = HttpContext.User.Claims
@@ -169,7 +172,7 @@ namespace DesafioAPI.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public ActionResult Create([FromBody] ProductCreateDTO productDTO) {
+        public ActionResult<Product> Create([FromBody] ProductCreateDTO productDTO) {
             try {
                 var product = _mapper.Map<Product>(productDTO);
 
@@ -191,11 +194,16 @@ namespace DesafioAPI.Controllers
             }
 
             try {
+                var productTemp = _database.Products.AsNoTracking()
+                    .FirstOrDefault(prod => prod.Id == productDTO.Id);
+
+                if (productTemp == null) return NotFound();
+
                 var product = _mapper.Map<Product>(productDTO);
 
                 _database.Entry(product).State = EntityState.Modified;
                 _database.SaveChanges();
-                return Ok();
+                return NoContent();
             } catch(Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     "Erro ao tentar editar o produto no banco de dados");
