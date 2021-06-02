@@ -113,7 +113,7 @@ namespace DesafioAPI.Controllers
                         .FirstOrDefault(stock => stock.ProductId == sellingItem.ProductId);
                     
                     if (stock == null) return NotFound();
-                    if (stock.Quantity < sellingItem.Quantity) return BadRequest();
+                    if (stock.Quantity < sellingItem.Quantity) return BadRequest("Quantidade em estoque insuficiente");
 
                     stock.Quantity -= sellingItem.Quantity;
                 }

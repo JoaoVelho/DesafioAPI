@@ -97,7 +97,7 @@ namespace DesafioAPI.Controllers
         [HttpPut("{id}")]
         public ActionResult Put(int id, [FromBody] StockEditDTO stockDTOTemp) {
             if (id != stockDTOTemp.Id) {
-                return BadRequest();
+                return BadRequest("Id da url diferente do id do corpo da requisição");
             }
             
             try {

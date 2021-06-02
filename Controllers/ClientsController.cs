@@ -93,7 +93,7 @@ namespace DesafioAPI.Controllers
         [Authorize(AuthenticationSchemes = "Bearer")]
         public async Task<ActionResult> Put(string id, [FromBody] ClientDTO clientDTO) {
             if (id != clientDTO.Id) {
-                return BadRequest();
+                return BadRequest("Id da url diferente do id do corpo da requisição");
             }
 
             try {
@@ -131,7 +131,8 @@ namespace DesafioAPI.Controllers
                     _database.SaveChanges();
                     return NoContent();
                 } else {
-                    return BadRequest();
+                    ModelState.AddModelError("Erro", "Problema na edição");
+                    return BadRequest(ModelState);
                 }
             } catch (Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
@@ -169,9 +170,9 @@ namespace DesafioAPI.Controllers
                 }
 
                 return clientDTO;
-            } catch(Exception e) {
+            } catch(Exception) {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Erro ao tentar deletar o cliente do banco de dados" + e.Message);
+                    "Erro ao tentar deletar o cliente do banco de dados");
             }
         }
 

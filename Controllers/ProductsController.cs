@@ -191,7 +191,7 @@ namespace DesafioAPI.Controllers
         [Authorize(Roles = "Admin")]
         public ActionResult Put(int id, [FromBody] ProductEditDTO productDTO) {
             if (id != productDTO.Id) {
-                return BadRequest();
+                return BadRequest("Id da url diferente do id do corpo da requisição");
             }
 
             try {
