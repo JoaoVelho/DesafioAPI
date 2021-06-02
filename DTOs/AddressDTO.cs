@@ -14,9 +14,6 @@ namespace DesafioAPI.DTOs
         [Range(1, Int32.MaxValue, ErrorMessage="Número do endereço inválido")]
         public int Number { get; set; }
 
-        [Required(ErrorMessage = "Complemento é necessário")]
-        [MaxLength(100, ErrorMessage = "Complemento muito grande, deve ter menos que {1} caracteres")]
-        [MinLength(1, ErrorMessage = "Complemento muito pequeno, deve ter mais que {1} caracteres")]
         public string Complement { get; set; }
 
         [Required(ErrorMessage = "CEP é necessário")]

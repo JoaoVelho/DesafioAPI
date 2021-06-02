@@ -1,3 +1,4 @@
+using DesafioAPI.Configurations;
 using DesafioAPI.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,12 @@ namespace DesafioAPI.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.ApplyConfiguration(new ClientAddressConfiguration());
+            builder.ApplyConfiguration(new ClientConfiguration());
+            builder.ApplyConfiguration(new ProductConfiguration());
+            builder.ApplyConfiguration(new SupplierAddressConfiguration());
+            builder.ApplyConfiguration(new SupplierConfiguration());
         }
     }
 }
