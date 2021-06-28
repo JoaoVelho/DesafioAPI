@@ -106,6 +106,10 @@ namespace DesafioAPI
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors(config => 
+                config.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
+            );
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -113,10 +117,6 @@ namespace DesafioAPI
             app.UseAuthentication();
 
             app.UseAuthorization();
-
-            app.UseCors(config => 
-                config.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
-            );
 
             app.UseEndpoints(endpoints =>
             {
