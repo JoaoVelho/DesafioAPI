@@ -14,7 +14,6 @@ namespace DesafioAPI.Controllers
     [Produces("application/json")]
     [Route("api/v1/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
     [ApiConventionType(typeof(DefaultApiConventions))]
     public class StocksController : ControllerBase
     {
@@ -25,6 +24,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
         public async Task<ActionResult<List<StockOutDTO>>> GetAsync() {
             try {
                 var stocksTemp = await _database.Stocks
@@ -49,6 +49,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
         public async Task<ActionResult<StockOutDTO>> GetByIdAsync(int id) {
             try {
                 var stockTemp = await _database.Stocks
@@ -72,6 +73,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpGet("product/{productId}")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         public async Task<ActionResult<StockOutDTO>> GetByProductIdAsync(int productId) {
             try {
                 var stockTemp = await _database.Stocks
@@ -95,6 +97,7 @@ namespace DesafioAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin", AuthenticationSchemes = "Bearer")]
         public ActionResult Put(int id, [FromBody] StockEditDTO stockDTOTemp) {
             if (id != stockDTOTemp.Id) {
                 return BadRequest("Id da url diferente do id do corpo da requisição");
